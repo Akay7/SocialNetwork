@@ -1,6 +1,6 @@
 services:
-  socialnetwork:
-    image: socialnetwork
+  social-network-app:
+    image: ghcr.io/akay7/socialnetwork
     build:
       context: .
       dockerfile: ./Dockerfile

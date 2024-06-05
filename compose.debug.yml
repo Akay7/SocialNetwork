@@ -1,6 +1,6 @@
 services:
-  socialnetwork:
-    image: socialnetwork
+  social-network-app:
+    image: ghcr.io/akay7/socialnetwork
     build:
       context: .
       dockerfile: ./Dockerfile
@@ -9,7 +9,7 @@ services:
       - 8000:8000
       - 5678:5678
 
-  postgres:
+  social-network-postgres:
     image: postgres:16
     environment:
       POSTGRES_DB: app
