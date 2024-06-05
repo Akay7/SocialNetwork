@@ -8,6 +8,11 @@ ENV PYTHONDONTWRITEBYTECODE=1
 # Turns off buffering for easier container logging
 ENV PYTHONUNBUFFERED=1
 
+# Setup a virtual environment
+ENV VIRTUAL_ENV=/venv PATH=/venv/bin:$PATH
+
+RUN python -m venv ${VIRTUAL_ENV}
+
 # Install pip requirements
 COPY requirements.txt .
 RUN python -m pip install -r requirements.txt
