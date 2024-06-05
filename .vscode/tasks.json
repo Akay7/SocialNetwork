@@ -50,6 +50,10 @@
 					"env/dev.env"
 				],
 				"network": "socialnetwork_default",
+				"volumes": [{
+					"localPath": "${workspaceFolder}/backend/",
+					"containerPath": "/app/"
+				}],
 			}
 		}
 	]
