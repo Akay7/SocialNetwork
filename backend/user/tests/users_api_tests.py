@@ -1,5 +1,7 @@
 import factory
+from django.utils import timezone
 from user.tests.fixtures import UserFactory
+from friend_request.tests.fixtures import FriendRequestFactory
 
 
 def test_search_by_email(user, authenticated_client, email):
@@ -53,3 +55,38 @@ def test_ten_records_per_page(authenticated_client):
 
     assert response.status_code == 200
     assert len(response.data["results"]) == 10
+
+
+def test_view_friends(authenticated_client, user, another_user):
+    FriendRequestFactory(
+        from_user=user, to_user=another_user, accepted_at=timezone.now()
+    )
+    FriendRequestFactory(
+        from_user=user, accepted_at=timezone.now(), rejected_at=timezone.now()
+    )
+    UserFactory()
+
+    response = authenticated_client.get("/api/users/?is_friend=true")
+
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["id"] == str(another_user.id)
+
+
+def test_view_not_friends(authenticated_client, user, another_user):
+    FriendRequestFactory(
+        from_user=user, to_user=another_user, accepted_at=timezone.now()
+    )
+    rejected = FriendRequestFactory(
+        from_user=user, accepted_at=timezone.now(), rejected_at=timezone.now()
+    ).to_user
+    never_friend = UserFactory()
+
+    response = authenticated_client.get("/api/users/?is_friend=false")
+
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 2
+    assert {user["id"] for user in response.data["results"]} == {
+        str(rejected.id),
+        str(never_friend.id),
+    }

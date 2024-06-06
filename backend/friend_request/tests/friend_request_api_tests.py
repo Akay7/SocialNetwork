@@ -1,21 +1,5 @@
-import pytest
-import factory
 from django.utils import timezone
-from user.tests.fixtures import UserFactory
-from friend_request.models import FriendRequest
-
-
-class FriendRequestFactory(factory.django.DjangoModelFactory):
-    from_user = factory.SubFactory(UserFactory)
-    to_user = factory.SubFactory(UserFactory)
-
-    class Meta:
-        model = FriendRequest
-
-
-@pytest.fixture
-def another_user():
-    return UserFactory()
+from friend_request.tests.fixtures import FriendRequestFactory
 
 
 def test_review_friend_requests(authenticated_client, user):
