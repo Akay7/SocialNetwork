@@ -53,6 +53,7 @@ class FriendRequestViewSet(
         permission_classes=[IsAuthenticated, IsForCurrentUser],
     )
     def accept(self, request, pk=None):
+        """Accept a friend request of another user."""
         friend_request = self.get_object()
         friend_request.accepted_at = timezone.now()
         friend_request.rejected_at = None
@@ -69,6 +70,7 @@ class FriendRequestViewSet(
         permission_classes=[IsAuthenticated, IsForCurrentUser],
     )
     def reject(self, request, pk=None):
+        """Reject a friend request of another user."""
         friend_request = self.get_object()
         friend_request.rejected_at = timezone.now()
         friend_request.save(update_fields=["rejected_at"])
