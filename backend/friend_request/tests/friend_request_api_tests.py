@@ -202,3 +202,48 @@ def test_cant_reject_own_friend_request(client, authenticated_client, user):
     }
     friend_request.refresh_from_db()
     assert not friend_request.rejected_at
+
+
+def test_review_received_requests(authenticated_client, user, another_user):
+    FriendRequestFactory(from_user=another_user, to_user=user)
+    FriendRequestFactory(from_user=user)
+
+    response = authenticated_client.get("/api/friend-request/?is_received=true")
+
+    assert response.status_code == 200
+    assert response.data["count"] == 1
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["to_user"] == user.id
+
+
+def test_review_pending_requests(authenticated_client, user, another_user):
+    FriendRequestFactory(to_user=user, accepted_at=timezone.now())
+    FriendRequestFactory(to_user=user, rejected_at=timezone.now())
+    pending_to = FriendRequestFactory(from_user=another_user, to_user=user)
+    pending_from = FriendRequestFactory(from_user=user)
+
+    response = authenticated_client.get(
+        "/api/friend-request/?not_accepted=true&not_rejected=true"
+    )
+
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 2
+    assert {request["id"] for request in response.data["results"]} == {
+        str(pending_to.id),
+        str(pending_from.id),
+    }
+
+
+def test_review_pending_requests_to_me(authenticated_client, user, another_user):
+    FriendRequestFactory(to_user=user, accepted_at=timezone.now())
+    FriendRequestFactory(to_user=user, rejected_at=timezone.now())
+    pending_to = FriendRequestFactory(from_user=another_user, to_user=user)
+    FriendRequestFactory(from_user=user)
+
+    response = authenticated_client.get(
+        "/api/friend-request/?not_accepted=true&not_rejected=true&is_received=true"
+    )
+
+    assert response.status_code == 200
+    assert len(response.data["results"]) == 1
+    assert response.data["results"][0]["id"] == str(pending_to.id)

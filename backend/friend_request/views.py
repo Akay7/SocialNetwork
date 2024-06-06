@@ -8,6 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import FriendRequest
 from .serializers import FriendRequestSerializer
 from .permissions import IsForCurrentUser
+from .filters import FriendRequestFilter
 
 
 class FriendRequestViewSet(
@@ -19,6 +20,7 @@ class FriendRequestViewSet(
 ):
     queryset = FriendRequest.objects.all()
     serializer_class = FriendRequestSerializer
+    filterset_class = FriendRequestFilter
 
     def get_queryset(self):
         return (
