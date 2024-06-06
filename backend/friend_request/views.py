@@ -5,6 +5,7 @@ from rest_framework import mixins
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
+from drf_spectacular.utils import extend_schema
 from .models import FriendRequest
 from .serializers import FriendRequestSerializer
 from .permissions import IsForCurrentUser
@@ -18,6 +19,17 @@ class FriendRequestViewSet(
     mixins.ListModelMixin,
     viewsets.GenericViewSet,
 ):
+    """
+    Shows the friend requests that the user has sent or received.
+
+    User can send friend requests to other users. Those invitation could be deleted by author.
+
+    User that receives a friend request can accept or reject it.
+
+    To review pending friend requests, use the `is_received`=True and
+    `not_accepted`=True and `not_rejected`=True filters.
+    """
+
     queryset = FriendRequest.objects.all()
     serializer_class = FriendRequestSerializer
     filterset_class = FriendRequestFilter
@@ -32,6 +44,9 @@ class FriendRequestViewSet(
     def perform_create(self, serializer):
         serializer.save(from_user=self.request.user)
 
+    @extend_schema(
+        request=None,
+    )
     @action(
         detail=True,
         methods=["post"],
@@ -45,6 +60,9 @@ class FriendRequestViewSet(
         serializer = self.get_serializer(friend_request)
         return Response(serializer.data)
 
+    @extend_schema(
+        request=None,
+    )
     @action(
         detail=True,
         methods=["post"],
