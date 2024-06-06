@@ -47,7 +47,7 @@
 			"dockerRun": {
 				"image": "ghcr.io/akay7/socialnetwork",
 				"envFiles": [
-					"env/dev.env"
+					"${workspaceFolder}/env/dev.env"
 				],
 				"network": "socialnetwork_default",
 				"volumes": [{

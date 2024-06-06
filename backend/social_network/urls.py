@@ -23,7 +23,9 @@ from drf_spectacular.views import (
     SpectacularRedocView,
     SpectacularSwaggerView,
 )
-
+from rest_framework_simplejwt.views import (
+    TokenRefreshView,
+)
 from user.views import UserViewSet
 
 
@@ -33,7 +35,12 @@ router.register(r"users", UserViewSet)
 
 urlpatterns = [
     path("api/", include(router.urls)),
+    path("api/", include("dj_rest_auth.urls")),
+    path("api/registration/", include("dj_rest_auth.registration.urls")),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
+    # auth via drf api
     path("api-auth/", include("rest_framework.urls")),
+    # docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
         "api/schema/swagger-ui/",
@@ -45,5 +52,6 @@ urlpatterns = [
         SpectacularRedocView.as_view(url_name="schema"),
         name="redoc",
     ),
+    # admin
     path("admin/", admin.site.urls),
 ]

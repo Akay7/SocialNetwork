@@ -1,6 +1,19 @@
 {
     "configurations": [
         {
+            "name": "Python Debugger: Django",
+            "type": "debugpy",
+            "request": "launch",
+            "preLaunchTask": "docker-compose: dependencies up",
+            "program": "${workspaceFolder}/backend/manage.py",
+            "args": [
+                "runserver"
+            ],
+            "django": true,
+            "autoStartBrowser": false,
+            "justMyCode": false
+        },
+        {
             "name": "Docker: Python - Django",
             "type": "docker",
             "request": "launch",
