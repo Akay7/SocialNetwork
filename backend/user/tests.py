@@ -1,4 +1,11 @@
 import pytest
+from rest_framework.test import APIClient
+from rest_framework_simplejwt.tokens import RefreshToken
+
+
+@pytest.fixture
+def client():
+    return APIClient()
 
 
 @pytest.fixture
@@ -14,6 +21,13 @@ def password():
 @pytest.fixture
 def user(django_user_model, email, password):
     return django_user_model.objects.create_user(email=email, password=password)
+
+
+def authenticate_client(client, user):
+    client.credentials(
+        HTTP_AUTHORIZATION=f"Bearer {RefreshToken.for_user(user).access_token}",
+    )
+    return client
 
 
 @pytest.mark.django_db
@@ -67,3 +81,16 @@ def test_cant_register_with_email_in_different_case(user, client, password):
 
     assert response.status_code == 400
     assert response.data["email"]
+
+
+@pytest.mark.parametrize("authenticated", [True, False])
+def test_authentication_is_mandatory(client, user, authenticated):
+    if authenticated:
+        authenticate_client(client, user)
+
+    response = client.get("/api/users/")
+
+    if authenticated:
+        assert response.status_code == 200
+    else:
+        assert response.status_code == 401
