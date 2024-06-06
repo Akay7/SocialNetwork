@@ -1,17 +1,5 @@
 import factory
-
-from django.contrib.auth import get_user_model
-
-User = get_user_model()
-
-
-class UserFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = User
-
-    first_name = factory.Faker("first_name")
-    last_name = factory.Faker("last_name")
-    email = factory.Faker("email")
+from user.tests.fixtures import UserFactory
 
 
 def test_search_by_email(user, authenticated_client, email):
@@ -49,7 +37,7 @@ def test_search_by_name_empty_result(user, authenticated_client):
 def test_search_by_name_find_by_part_of_name(authenticated_client):
     names = {"Amarendra", "Amar", "aman", "Abhirama"}
     UserFactory.create_batch(len(names), first_name=factory.Iterator(names))
-    UserFactory.create(first_name="Egor")
+    UserFactory.create(first_name="Egor", last_name="Empty")
 
     response = authenticated_client.get("/api/users/?search=am")
 

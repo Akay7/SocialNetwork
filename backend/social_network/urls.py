@@ -27,10 +27,12 @@ from rest_framework_simplejwt.views import (
     TokenRefreshView,
 )
 from user.views import UserViewSet
+from friend_request.views import FriendRequestViewSet
 
 
 router = routers.DefaultRouter()
 router.register(r"users", UserViewSet)
+router.register(r"friend-request", FriendRequestViewSet)
 
 
 urlpatterns = [
