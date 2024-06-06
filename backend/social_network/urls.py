@@ -40,8 +40,6 @@ urlpatterns = [
     path("api/", include("dj_rest_auth.urls")),
     path("api/registration/", include("dj_rest_auth.registration.urls")),
     path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
-    # auth via drf api
-    path("api-auth/", include("rest_framework.urls")),
     # docs
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
