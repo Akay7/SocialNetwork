@@ -1,7 +1,8 @@
 import pytest
+import factory
+from django.utils import timezone
 from user.tests.fixtures import UserFactory
 from friend_request.models import FriendRequest
-import factory
 
 
 class FriendRequestFactory(factory.django.DjangoModelFactory):
@@ -138,6 +139,24 @@ def test_can_accept_friend_request(authenticated_client, user):
     assert friend_request.accepted_at
 
 
+def test_can_accept_rejected_friend_request(authenticated_client, user):
+    friend_request = FriendRequestFactory(to_user=user, rejected_at=timezone.now())
+    assert not friend_request.accepted_at
+
+    response = authenticated_client.post(
+        f"/api/friend-request/{friend_request.id}/accept/"
+    )
+
+    assert response.status_code == 200
+    assert response.data["id"] == str(friend_request.id)
+    assert response.data["to_user"] == user.id
+    assert response.data["created_at"]
+    assert response.data["accepted_at"]
+    friend_request.refresh_from_db()
+    assert friend_request.accepted_at
+    assert friend_request.rejected_at is None
+
+
 def test_can_reject_friend_request(authenticated_client, user):
     friend_request = FriendRequestFactory(to_user=user)
     assert not friend_request.rejected_at
@@ -153,3 +172,49 @@ def test_can_reject_friend_request(authenticated_client, user):
     assert response.data["rejected_at"]
     friend_request.refresh_from_db()
     assert friend_request.rejected_at
+
+
+def test_can_reject_accepted_friend_request(authenticated_client, user):
+    friend_request = FriendRequestFactory(to_user=user, accepted_at=timezone.now())
+    assert not friend_request.rejected_at
+
+    response = authenticated_client.post(
+        f"/api/friend-request/{friend_request.id}/reject/"
+    )
+
+    assert response.status_code == 200
+    assert response.data["id"] == str(friend_request.id)
+    assert response.data["to_user"] == user.id
+    assert response.data["created_at"]
+    assert response.data["rejected_at"]
+    friend_request.refresh_from_db()
+    assert friend_request.accepted_at
+    assert friend_request.rejected_at
+
+
+def test_cant_accept_own_friend_request(client, authenticated_client, user):
+    friend_request = FriendRequestFactory(from_user=user)
+    assert not friend_request.accepted_at
+
+    response = client.post(f"/api/friend-request/{friend_request.id}/accept/")
+
+    assert response.status_code == 403
+    assert response.data == {
+        "detail": "You can't neither accept nor decline your own friend request."
+    }
+    friend_request.refresh_from_db()
+    assert not friend_request.accepted_at
+
+
+def test_cant_reject_own_friend_request(client, authenticated_client, user):
+    friend_request = FriendRequestFactory(from_user=user)
+    assert not friend_request.rejected_at
+
+    response = client.post(f"/api/friend-request/{friend_request.id}/reject/")
+
+    assert response.status_code == 403
+    assert response.data == {
+        "detail": "You can't neither accept nor decline your own friend request."
+    }
+    friend_request.refresh_from_db()
+    assert not friend_request.rejected_at
