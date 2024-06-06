@@ -89,6 +89,67 @@ def test_cant_create_request_to_user_itself(authenticated_client, user):
     }
 
 
-# test cant create request to user that already has a request
-# test cant create request to user that already friend
-# test cant create request to user that already rejected request
+def test_cant_create_second_request_to_user(authenticated_client, user, another_user):
+    FriendRequestFactory(from_user=user, to_user=another_user)
+
+    response = authenticated_client.post(
+        "/api/friend-request/",
+        {
+            "to_user": another_user.id,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.data["to_user"] == [
+        "You have already sent a friend request to this user."
+    ]
+
+
+def test_cant_create_second_request_to_user_that_send_request(
+    authenticated_client, user, another_user
+):
+    FriendRequestFactory(from_user=another_user, to_user=user)
+
+    response = authenticated_client.post(
+        "/api/friend-request/",
+        {
+            "to_user": another_user.id,
+        },
+    )
+
+    assert response.status_code == 400
+    assert response.data["to_user"] == ["That user already sent you a friend request."]
+
+
+def test_can_accept_friend_request(authenticated_client, user):
+    friend_request = FriendRequestFactory(to_user=user)
+    assert not friend_request.accepted_at
+
+    response = authenticated_client.post(
+        f"/api/friend-request/{friend_request.id}/accept/"
+    )
+
+    assert response.status_code == 200
+    assert response.data["id"] == str(friend_request.id)
+    assert response.data["to_user"] == user.id
+    assert response.data["created_at"]
+    assert response.data["accepted_at"]
+    friend_request.refresh_from_db()
+    assert friend_request.accepted_at
+
+
+def test_can_reject_friend_request(authenticated_client, user):
+    friend_request = FriendRequestFactory(to_user=user)
+    assert not friend_request.rejected_at
+
+    response = authenticated_client.post(
+        f"/api/friend-request/{friend_request.id}/reject/"
+    )
+
+    assert response.status_code == 200
+    assert response.data["id"] == str(friend_request.id)
+    assert response.data["to_user"] == user.id
+    assert response.data["created_at"]
+    assert response.data["rejected_at"]
+    friend_request.refresh_from_db()
+    assert friend_request.rejected_at
